@@ -1,0 +1,15 @@
+# Cloudflare Worker relay for Imagine Pad.
+# Runs FLUX.1 [schnell] on Workers AI so no Cloudflare token ships in the APK.
+name = "imagine-pad"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[ai]
+binding = "AI"
+
+[vars]
+# Requests per minute allowed per client IP (best effort, per Worker isolate).
+RATE_LIMIT_PER_MINUTE = "6"
+
+# Secret (NOT in this file):  npx wrangler secret put APP_SHARED_SECRET

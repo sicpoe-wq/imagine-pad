@@ -1,0 +1,12 @@
+{
+  "name": "imagine-pad-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/",
+    "deploy": "./deploy.sh"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
