@@ -26,16 +26,17 @@ function req(body, { secret = SECRET, method = 'POST', path = '/generate', ip = 
   });
 }
 
-test('generate success returns base64 JSON and passes steps/seed', async () => {
+test('generate success returns base64 JSON, passes steps, drops seed (schema rejects it)', async () => {
   _resetLimiter();
   const e = env(ok);
   const r = await worker.fetch(req({ prompt: ' a cat ', steps: 6, seed: 42, width: 512 }), e);
   assert.equal(r.status, 200);
   const j = await r.json();
   assert.equal(j.image, JPEG_B64);
-  assert.equal(j.seed, 42);
+  assert.equal(j.seed, null);
+  assert.equal(j.seedIgnored, true);
   assert.match(j.note, /width ignored/);
-  assert.deepEqual(e.calls[0], { model: '@cf/black-forest-labs/flux-1-schnell', input: { prompt: 'a cat', steps: 6, seed: 42 } });
+  assert.deepEqual(e.calls[0], { model: '@cf/black-forest-labs/flux-1-schnell', input: { prompt: 'a cat', steps: 6 } });
 });
 
 test('default steps is 4 and seed omitted', async () => {

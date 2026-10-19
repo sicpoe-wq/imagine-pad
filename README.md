@@ -5,6 +5,9 @@ Free AI image generator for Android (Flutter). Type a prompt, pick a style and s
 **Download the latest APK:** https://github.com/sicpoe-wq/imagine-pad/releases/latest/download/ImaginePad-debug.apk
 (sideload; allow installs from unknown sources). Package `com.tim.imagine_pad`.
 
+## Status (v0.2.0)
+**Cloudflare is live.** Release builds talk to the Worker at `https://imagine-pad.sicpoe.workers.dev` (URL and shared secret are injected at build time with `--dart-define`; the secret is not in this repo). Auto mode uses Cloudflare FLUX first and falls back to Pollinations. Note: Workers AI's FLUX schnell does not accept a seed, so on Cloudflare "same seed" / fixed seed does not reproduce an image (the Worker drops the seed); Pollinations still honors seeds.
+
 ## Providers
 | Provider | Cost | Notes |
 |---|---|---|

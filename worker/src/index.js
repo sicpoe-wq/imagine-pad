@@ -34,8 +34,8 @@ export default {
 
       let out;
       try {
+        // Workers AI's flux-1-schnell schema rejects a 'seed' property, so it is not forwarded.
         const input = { prompt, steps };
-        if (seed !== undefined) input.seed = seed;
         out = await env.AI.run(MODEL, input);
       } catch (e) {
         throw mapAiError(e);
@@ -53,9 +53,10 @@ export default {
         mime: 'image/jpeg',
         model: MODEL,
         steps,
-        seed: seed ?? null,
+        seed: null,
         width: 1024,
         height: 1024,
+        ...(seed !== undefined ? { seedIgnored: true } : {}),
         ...(ignored.length ? { note: `${ignored.join(' and ')} ignored: FLUX.1 schnell outputs 1024x1024` } : {}),
       });
     } catch (e) {
