@@ -18,6 +18,10 @@ class SettingsStore {
   static const _kStyle = 'last_style';
   static const _kAspect = 'last_aspect';
   static const _kCfQuota = 'cf_quota_until';
+  static const _kBatch = 'batch_count';
+  static const _kLocalDay = 'local_cf_day';
+  static const _kLocalCount = 'local_cf_count';
+  static const _kUsageCache = 'usage_cache';
 
   static const sWorkerSecret = 'worker_secret_override';
   static const sXai = 'xai_key';
@@ -47,12 +51,32 @@ class SettingsStore {
 
   DateTime? get cfQuotaUntil {
     final ms = prefs.getInt(_kCfQuota);
-    return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true);
+    return ms == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true);
   }
 
   set cfQuotaUntil(DateTime? d) => d == null
       ? prefs.remove(_kCfQuota)
       : prefs.setInt(_kCfQuota, d.millisecondsSinceEpoch);
+
+  int get batchCount => (prefs.getInt(_kBatch) ?? 1).clamp(1, 4);
+  set batchCount(int v) => prefs.setInt(_kBatch, v.clamp(1, 4));
+
+  /// App-side count of Cloudflare images per UTC day (fallback when the
+  /// Worker can't report usage).
+  int localCfCount(String utcDay) => prefs.getString(_kLocalDay) == utcDay
+      ? (prefs.getInt(_kLocalCount) ?? 0)
+      : 0;
+  void bumpLocalCf(String utcDay, [int by = 1]) {
+    final n = localCfCount(utcDay) + by;
+    prefs.setString(_kLocalDay, utcDay);
+    prefs.setInt(_kLocalCount, n);
+  }
+
+  String? get usageCacheJson => prefs.getString(_kUsageCache);
+  set usageCacheJson(String? v) =>
+      v == null ? prefs.remove(_kUsageCache) : prefs.setString(_kUsageCache, v);
 
   Future<String> readSecret(String k) async {
     try {

@@ -14,7 +14,10 @@ class AppTheme {
       scaffoldBackgroundColor: const Color(0xFF0B0A10),
       textTheme: GoogleFonts.interTextTheme(base.textTheme),
       appBarTheme: const AppBarTheme(
-          centerTitle: false, backgroundColor: Color(0xFF0B0A10), scrolledUnderElevation: 0),
+        centerTitle: false,
+        backgroundColor: Color(0xFF0B0A10),
+        scrolledUnderElevation: 0,
+      ),
       cardTheme: CardThemeData(
         elevation: 0,
         color: scheme.surfaceContainerHigh,
@@ -25,13 +28,20 @@ class AppTheme {
         filled: true,
         fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(18), borderSide: BorderSide.none),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
       chipTheme: base.chipTheme.copyWith(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
+      snackBarTheme: const SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 }

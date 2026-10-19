@@ -29,7 +29,8 @@ class AllProvidersFailed implements Exception {
   const AllProvidersFailed(this.attempts);
   GenException get last => attempts.lastWhere((a) => a.error != null).error!;
   @override
-  String toString() => 'AllProvidersFailed(${attempts.map((a) => a.error).join(', ')})';
+  String toString() =>
+      'AllProvidersFailed(${attempts.map((a) => a.error).join(', ')})';
 }
 
 /// Picks providers for a mode and handles automatic fallback.
@@ -59,24 +60,48 @@ class GenerationService {
   bool get cloudflareQuotaHit =>
       cloudflareQuotaUntil != null && now().isBefore(cloudflareQuotaUntil!);
 
+  /// The provider a new request will actually start with (skips an
+  /// unconfigured or out-of-quota Cloudflare in Auto mode).
+  ProviderId? get firstProvider {
+    final c = chain();
+    for (var i = 0; i < c.length; i++) {
+      final p = c[i];
+      final isLast = i == c.length - 1;
+      if (mode == ProviderMode.auto && !isLast) {
+        if (!p.isConfigured) continue;
+        if (p.id == ProviderId.cloudflare && cloudflareQuotaHit) continue;
+      }
+      return p.id;
+    }
+    return null;
+  }
+
   /// Ordered list of providers to try for the current mode.
   List<ImageGenerator> chain() => switch (mode) {
-        ProviderMode.auto => [cloudflare, pollinations],
-        ProviderMode.cloudflareOnly => [cloudflare],
-        ProviderMode.pollinationsOnly => [pollinations],
-        ProviderMode.xai || ProviderMode.openai || ProviderMode.stability =>
-          [if (paid != null) paid!],
-      };
+    ProviderMode.auto => [cloudflare, pollinations],
+    ProviderMode.cloudflareOnly => [cloudflare],
+    ProviderMode.pollinationsOnly => [pollinations],
+    ProviderMode.xai ||
+    ProviderMode.openai ||
+    ProviderMode.stability => [if (paid != null) paid!],
+  };
 
-  Future<GenOutcome> generate(GenRequest req,
-      {void Function(ProviderId provider)? onTrying}) async {
+  Future<GenOutcome> generate(
+    GenRequest req, {
+    void Function(ProviderId provider)? onTrying,
+  }) async {
     final attempts = <Attempt>[];
     final providers = chain();
     if (providers.isEmpty) {
       throw AllProvidersFailed([
-        Attempt(ProviderId.xai,
-            error: const GenException(GenErrorCode.notConfigured, 'No paid provider',
-                provider: ProviderId.xai))
+        Attempt(
+          ProviderId.xai,
+          error: const GenException(
+            GenErrorCode.notConfigured,
+            'No paid provider',
+            provider: ProviderId.xai,
+          ),
+        ),
       ]);
     }
     final auto = mode == ProviderMode.auto;
@@ -85,16 +110,31 @@ class GenerationService {
       final isLast = i == providers.length - 1;
       if (auto && !isLast) {
         if (!p.isConfigured) {
-          attempts.add(Attempt(p.id,
+          attempts.add(
+            Attempt(
+              p.id,
               skipped: true,
-              error: GenException(GenErrorCode.notConfigured, 'Not set up', provider: p.id)));
+              error: GenException(
+                GenErrorCode.notConfigured,
+                'Not set up',
+                provider: p.id,
+              ),
+            ),
+          );
           continue;
         }
         if (p.id == ProviderId.cloudflare && cloudflareQuotaHit) {
-          attempts.add(Attempt(p.id,
+          attempts.add(
+            Attempt(
+              p.id,
               skipped: true,
-              error: GenException(GenErrorCode.quota, 'Daily free allocation used',
-                  provider: p.id)));
+              error: GenException(
+                GenErrorCode.quota,
+                'Daily free allocation used',
+                provider: p.id,
+              ),
+            ),
+          );
           continue;
         }
       }

@@ -7,21 +7,67 @@ class StylePreset {
 
 const stylePresets = <StylePreset>[
   StylePreset('none', 'None', ''),
-  StylePreset('photo', 'Photo', 'photorealistic, natural lighting, sharp focus, 35mm photo, highly detailed'),
-  StylePreset('cinematic', 'Cinematic', 'cinematic still, dramatic lighting, shallow depth of field, film grain'),
-  StylePreset('anime', 'Anime', 'anime style, clean line art, vibrant cel shading'),
-  StylePreset('3d', '3D render', '3D render, octane render, soft global illumination, high detail'),
-  StylePreset('painting', 'Oil painting', 'oil painting on canvas, visible brush strokes, rich colors'),
-  StylePreset('watercolor', 'Watercolor', 'watercolor painting, soft washes, paper texture'),
-  StylePreset('pixel', 'Pixel art', 'pixel art, 16-bit retro game style, crisp pixels'),
-  StylePreset('comic', 'Comic', 'comic book illustration, bold ink outlines, halftone shading'),
-  StylePreset('sketch', 'Sketch', 'pencil sketch, graphite shading, hand drawn'),
-  StylePreset('cyberpunk', 'Cyberpunk', 'cyberpunk, neon lights, rainy night, futuristic'),
-  StylePreset('lowpoly', 'Low poly', 'low poly geometric art, flat shaded facets'),
+  StylePreset(
+    'photo',
+    'Photo',
+    'photorealistic, natural lighting, sharp focus, 35mm photo, highly detailed',
+  ),
+  StylePreset(
+    'cinematic',
+    'Cinematic',
+    'cinematic still, dramatic lighting, shallow depth of field, film grain',
+  ),
+  StylePreset(
+    'anime',
+    'Anime',
+    'anime style, clean line art, vibrant cel shading',
+  ),
+  StylePreset(
+    '3d',
+    '3D render',
+    '3D render, octane render, soft global illumination, high detail',
+  ),
+  StylePreset(
+    'painting',
+    'Oil painting',
+    'oil painting on canvas, visible brush strokes, rich colors',
+  ),
+  StylePreset(
+    'watercolor',
+    'Watercolor',
+    'watercolor painting, soft washes, paper texture',
+  ),
+  StylePreset(
+    'pixel',
+    'Pixel art',
+    'pixel art, 16-bit retro game style, crisp pixels',
+  ),
+  StylePreset(
+    'comic',
+    'Comic',
+    'comic book illustration, bold ink outlines, halftone shading',
+  ),
+  StylePreset(
+    'sketch',
+    'Sketch',
+    'pencil sketch, graphite shading, hand drawn',
+  ),
+  StylePreset(
+    'cyberpunk',
+    'Cyberpunk',
+    'cyberpunk, neon lights, rainy night, futuristic',
+  ),
+  StylePreset(
+    'lowpoly',
+    'Low poly',
+    'low poly geometric art, flat shaded facets',
+  ),
 ];
 
-StylePreset presetById(String? id) =>
-    stylePresets.firstWhere((p) => p.id == id, orElse: () => stylePresets.first);
+StylePreset presetById(String? id) => stylePresets.firstWhere(
+  (p) => p.id == id,
+  orElse: () => stylePresets.first,
+);
 
 /// Base prompt + style suffix.
 String composePrompt(String base, StylePreset style) {

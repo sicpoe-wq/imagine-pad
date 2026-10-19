@@ -49,3 +49,8 @@ worker/node_modules/
 worker/.wrangler/
 worker/.dev.vars
 *.apk
+
+# Release signing (never commit)
+key.properties
+*.jks
+*.keystore

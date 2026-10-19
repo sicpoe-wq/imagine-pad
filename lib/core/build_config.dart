@@ -6,5 +6,8 @@
 class BuildConfig {
   static const workerUrl = String.fromEnvironment('WORKER_URL');
   static const appSharedSecret = String.fromEnvironment('APP_SHARED_SECRET');
-  static const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.1.0');
+  static const appVersion = String.fromEnvironment(
+    'APP_VERSION',
+    defaultValue: '0.3.0',
+  );
 }

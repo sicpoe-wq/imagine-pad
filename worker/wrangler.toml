@@ -10,6 +10,16 @@ binding = "AI"
 
 [vars]
 # Requests per minute allowed per client IP (best effort, per Worker isolate).
-RATE_LIMIT_PER_MINUTE = "6"
+# 20 leaves room for a 4-image batch plus edits and prompt enhancing.
+RATE_LIMIT_PER_MINUTE = "20"
 
 # Secret (NOT in this file):  npx wrangler secret put APP_SHARED_SECRET
+
+# Daily usage counter (free plan: SQLite-backed Durable Objects).
+[[durable_objects.bindings]]
+name = "USAGE"
+class_name = "UsageCounter"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["UsageCounter"]

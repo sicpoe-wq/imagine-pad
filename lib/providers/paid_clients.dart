@@ -20,7 +20,11 @@ abstract class _KeyedClient implements ImageGenerator {
 
   void ensureKey() {
     if (!isConfigured) {
-      throw GenException(GenErrorCode.notConfigured, 'No API key saved', provider: id);
+      throw GenException(
+        GenErrorCode.notConfigured,
+        'No API key saved',
+        provider: id,
+      );
     }
   }
 
@@ -28,8 +32,11 @@ abstract class _KeyedClient implements ImageGenerator {
     try {
       return await f.timeout(timeout);
     } on TimeoutException {
-      throw GenException(GenErrorCode.timeout, 'No answer in ${timeout.inSeconds}s',
-          provider: id);
+      throw GenException(
+        GenErrorCode.timeout,
+        'No answer in ${timeout.inSeconds}s',
+        provider: id,
+      );
     } on SocketException catch (e) {
       throw GenException(GenErrorCode.network, e.message, provider: id);
     } on http.ClientException catch (e) {
@@ -80,7 +87,9 @@ GenException mapPaidError(ProviderId id, http.Response r) {
   } else if (s == 401) {
     code = GenErrorCode.auth;
   } else if (s == 403) {
-    code = id == ProviderId.stability ? GenErrorCode.contentFiltered : GenErrorCode.auth;
+    code = id == ProviderId.stability
+        ? GenErrorCode.contentFiltered
+        : GenErrorCode.auth;
   } else if (s == 429) {
     code = GenErrorCode.rateLimited;
   } else if (s == 400 || s == 404 || s == 413 || s == 422) {
@@ -90,8 +99,13 @@ GenException mapPaidError(ProviderId id, http.Response r) {
   } else {
     code = GenErrorCode.unknown;
   }
-  return GenException(code, msg,
-      provider: id, httpStatus: s, retryAfter: parseRetryAfter(r.headers['retry-after']));
+  return GenException(
+    code,
+    msg,
+    provider: id,
+    httpStatus: s,
+    retryAfter: parseRetryAfter(r.headers['retry-after']),
+  );
 }
 
 /// xAI Imagine API (OpenAI-compatible): POST https://api.x.ai/v1/images/generations
@@ -101,35 +115,49 @@ class XaiClient extends _KeyedClient {
   static const defaultModel = 'grok-imagine-image-2.0';
   final String model;
 
-  XaiClient(http.Client c, String key,
-      {String? model, Duration timeout = const Duration(seconds: 120)})
-      : model = (model == null || model.trim().isEmpty) ? defaultModel : model.trim(),
-        super(c, key, timeout);
+  XaiClient(
+    http.Client c,
+    String key, {
+    String? model,
+    Duration timeout = const Duration(seconds: 120),
+  }) : model = (model == null || model.trim().isEmpty)
+           ? defaultModel
+           : model.trim(),
+       super(c, key, timeout);
 
   @override
   ProviderId get id => ProviderId.xai;
 
   Map<String, dynamic> buildBody(GenRequest req) => {
-        'model': model,
-        'prompt': req.prompt,
-        'n': 1,
-        'response_format': 'b64_json',
-        'aspect_ratio': req.aspect.ratio,
-      };
+    'model': model,
+    'prompt': req.prompt,
+    'n': 1,
+    'response_format': 'b64_json',
+    'aspect_ratio': req.aspect.ratio,
+  };
 
   @override
   Future<GenImage> generate(GenRequest req) async {
     ensureKey();
-    final r = await guard(http_.post(Uri.parse(endpoint),
+    final r = await guard(
+      http_.post(
+        Uri.parse(endpoint),
         headers: {
           'Authorization': 'Bearer ${apiKey.trim()}',
           'Content-Type': 'application/json',
         },
-        body: jsonEncode(buildBody(req))));
+        body: jsonEncode(buildBody(req)),
+      ),
+    );
     if (r.statusCode != 200) throw errorFrom(r);
     final bytes = await decodeOpenAiStyle(r, http_, id, guard);
     return GenImage(
-        bytes: bytes, mime: sniffMime(bytes), provider: id, model: model, seed: req.seed);
+      bytes: bytes,
+      mime: sniffMime(bytes),
+      provider: id,
+      model: model,
+      seed: req.seed,
+    );
   }
 }
 
@@ -140,46 +168,64 @@ class OpenAiClient extends _KeyedClient {
   static const defaultModel = 'gpt-image-2.5-flare';
   final String model;
 
-  OpenAiClient(http.Client c, String key,
-      {String? model, Duration timeout = const Duration(seconds: 180)})
-      : model = (model == null || model.trim().isEmpty) ? defaultModel : model.trim(),
-        super(c, key, timeout);
+  OpenAiClient(
+    http.Client c,
+    String key, {
+    String? model,
+    Duration timeout = const Duration(seconds: 180),
+  }) : model = (model == null || model.trim().isEmpty)
+           ? defaultModel
+           : model.trim(),
+       super(c, key, timeout);
 
   @override
   ProviderId get id => ProviderId.openai;
 
   static String sizeFor(ImageAspect a) => switch (a) {
-        ImageAspect.square => '1024x1024',
-        ImageAspect.portrait => '1024x1536',
-        ImageAspect.landscape => '1536x1024',
-      };
+    ImageAspect.square => '1024x1024',
+    ImageAspect.portrait => '1024x1536',
+    ImageAspect.landscape => '1536x1024',
+  };
 
   Map<String, dynamic> buildBody(GenRequest req) => {
-        'model': model,
-        'prompt': req.prompt,
-        'n': 1,
-        'size': sizeFor(req.aspect),
-      };
+    'model': model,
+    'prompt': req.prompt,
+    'n': 1,
+    'size': sizeFor(req.aspect),
+  };
 
   @override
   Future<GenImage> generate(GenRequest req) async {
     ensureKey();
-    final r = await guard(http_.post(Uri.parse(endpoint),
+    final r = await guard(
+      http_.post(
+        Uri.parse(endpoint),
         headers: {
           'Authorization': 'Bearer ${apiKey.trim()}',
           'Content-Type': 'application/json',
         },
-        body: jsonEncode(buildBody(req))));
+        body: jsonEncode(buildBody(req)),
+      ),
+    );
     if (r.statusCode != 200) throw errorFrom(r);
     final bytes = await decodeOpenAiStyle(r, http_, id, guard);
     return GenImage(
-        bytes: bytes, mime: sniffMime(bytes), provider: id, model: model, seed: req.seed);
+      bytes: bytes,
+      mime: sniffMime(bytes),
+      provider: id,
+      model: model,
+      seed: req.seed,
+    );
   }
 }
 
 /// Reads {data:[{b64_json|url}]} and returns image bytes.
-Future<Uint8List> decodeOpenAiStyle(http.Response r, http.Client c, ProviderId id,
-    Future<http.Response> Function(Future<http.Response>) guard) async {
+Future<Uint8List> decodeOpenAiStyle(
+  http.Response r,
+  http.Client c,
+  ProviderId id,
+  Future<http.Response> Function(Future<http.Response>) guard,
+) async {
   try {
     final j = jsonDecode(utf8.decode(r.bodyBytes)) as Map<String, dynamic>;
     final first = (j['data'] as List).first as Map<String, dynamic>;
@@ -188,30 +234,39 @@ Future<Uint8List> decodeOpenAiStyle(http.Response r, http.Client c, ProviderId i
     final url = first['url'] as String?;
     if (url != null) {
       final img = await guard(c.get(Uri.parse(url)));
-      if (img.statusCode == 200 && looksLikeImage(img.bodyBytes)) return img.bodyBytes;
+      if (img.statusCode == 200 && looksLikeImage(img.bodyBytes)) {
+        return img.bodyBytes;
+      }
     }
   } catch (_) {}
-  throw GenException(GenErrorCode.server, 'Response had no image', provider: id);
+  throw GenException(
+    GenErrorCode.server,
+    'Response had no image',
+    provider: id,
+  );
 }
 
 /// Stability AI Stable Image Core:
 /// POST https://api.stability.ai/v2beta/stable-image/generate/core (multipart).
 class StabilityClient extends _KeyedClient {
-  static const endpoint = 'https://api.stability.ai/v2beta/stable-image/generate/core';
+  static const endpoint =
+      'https://api.stability.ai/v2beta/stable-image/generate/core';
 
-  StabilityClient(http.Client c, String key,
-      {Duration timeout = const Duration(seconds: 120)})
-      : super(c, key, timeout);
+  StabilityClient(
+    http.Client c,
+    String key, {
+    Duration timeout = const Duration(seconds: 120),
+  }) : super(c, key, timeout);
 
   @override
   ProviderId get id => ProviderId.stability;
 
   Map<String, String> buildFields(GenRequest req) => {
-        'prompt': req.prompt,
-        'aspect_ratio': req.aspect.ratio,
-        'seed': '${req.seed % 4294967294}',
-        'output_format': 'jpeg',
-      };
+    'prompt': req.prompt,
+    'aspect_ratio': req.aspect.ratio,
+    'seed': '${req.seed % 4294967294}',
+    'output_format': 'jpeg',
+  };
 
   @override
   Future<GenImage> generate(GenRequest req) async {
@@ -224,14 +279,19 @@ class StabilityClient extends _KeyedClient {
     final r = await guard(sendForm(mr));
     if (r.statusCode != 200) throw errorFrom(r);
     if (!looksLikeImage(r.bodyBytes)) {
-      throw GenException(GenErrorCode.server, 'Response had no image', provider: id);
+      throw GenException(
+        GenErrorCode.server,
+        'Response had no image',
+        provider: id,
+      );
     }
     return GenImage(
-        bytes: r.bodyBytes,
-        mime: sniffMime(r.bodyBytes),
-        provider: id,
-        model: 'stable-image-core',
-        seed: int.tryParse(r.headers['seed'] ?? '') ?? req.seed);
+      bytes: r.bodyBytes,
+      mime: sniffMime(r.bodyBytes),
+      provider: id,
+      model: 'stable-image-core',
+      seed: int.tryParse(r.headers['seed'] ?? '') ?? req.seed,
+    );
   }
 
   Future<http.Response> sendForm(http.MultipartRequest mr) async =>

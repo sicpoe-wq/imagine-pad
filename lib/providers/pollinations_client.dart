@@ -21,9 +21,11 @@ class PollinationsClient implements ImageGenerator {
   static DateTime? lastRequestAt;
   static DateTime? blockedUntil;
 
-  PollinationsClient(this._http,
-      {this.timeout = const Duration(seconds: 120), DateTime Function()? now})
-      : _now = now ?? DateTime.now;
+  PollinationsClient(
+    this._http, {
+    this.timeout = const Duration(seconds: 120),
+    DateTime Function()? now,
+  }) : _now = now ?? DateTime.now;
 
   @override
   ProviderId get id => ProviderId.pollinations;
@@ -33,21 +35,27 @@ class PollinationsClient implements ImageGenerator {
 
   /// Pixel size for an aspect, kept within the documented 768×768 area cap.
   static (int, int) sizeFor(ImageAspect a) => switch (a) {
-        ImageAspect.square => (768, 768),
-        ImageAspect.portrait => (624, 936),
-        ImageAspect.landscape => (936, 624),
-      };
+    ImageAspect.square => (768, 768),
+    ImageAspect.portrait => (624, 936),
+    ImageAspect.landscape => (936, 624),
+  };
 
-  static Uri buildUri(String prompt, {required ImageAspect aspect, required int seed}) {
+  static Uri buildUri(
+    String prompt, {
+    required ImageAspect aspect,
+    required int seed,
+  }) {
     final (w, h) = sizeFor(aspect);
     // Encode the prompt as one path segment (spaces -> %20, '/' escaped).
     final encoded = Uri.encodeComponent(prompt.trim());
-    return Uri.parse('$base$encoded').replace(queryParameters: {
-      'width': '$w',
-      'height': '$h',
-      'seed': '$seed',
-      'nologo': 'true',
-    });
+    return Uri.parse('$base$encoded').replace(
+      queryParameters: {
+        'width': '$w',
+        'height': '$h',
+        'seed': '$seed',
+        'nologo': 'true',
+      },
+    );
   }
 
   /// Time left before another anonymous request is allowed (client-side).
@@ -74,18 +82,26 @@ class PollinationsClient implements ImageGenerator {
   Future<GenImage> generate(GenRequest req) async {
     final wait = cooldownRemaining();
     if (wait > Duration.zero) {
-      throw GenException(GenErrorCode.rateLimited,
-          'Pollinations allows one free image every 45 seconds.',
-          provider: id, retryAfter: _roundUp(wait));
+      throw GenException(
+        GenErrorCode.rateLimited,
+        'Pollinations allows one free image every 45 seconds.',
+        provider: id,
+        retryAfter: _roundUp(wait),
+      );
     }
     final uri = buildUri(req.prompt, aspect: req.aspect, seed: req.seed);
     lastRequestAt = _now();
     http.Response res;
     try {
-      res = await _http.get(uri, headers: {'Accept': 'image/*'}).timeout(timeout);
+      res = await _http
+          .get(uri, headers: {'Accept': 'image/*'})
+          .timeout(timeout);
     } on TimeoutException {
-      throw GenException(GenErrorCode.timeout, 'No answer in ${timeout.inSeconds}s',
-          provider: id);
+      throw GenException(
+        GenErrorCode.timeout,
+        'No answer in ${timeout.inSeconds}s',
+        provider: id,
+      );
     } on SocketException catch (e) {
       throw GenException(GenErrorCode.network, e.message, provider: id);
     } on http.ClientException catch (e) {
@@ -112,26 +128,52 @@ class PollinationsClient implements ImageGenerator {
       blockedUntil = _now().add(ra);
       // Report the real wait: the longer of Retry-After and our 45 s gap.
       final wait = cooldownRemaining();
-      throw GenException(GenErrorCode.rateLimited,
-          'Pollinations free tier is at its limit.',
-          provider: id, retryAfter: _roundUp(wait > ra ? wait : ra), httpStatus: s);
+      throw GenException(
+        GenErrorCode.rateLimited,
+        'Pollinations free tier is at its limit.',
+        provider: id,
+        retryAfter: _roundUp(wait > ra ? wait : ra),
+        httpStatus: s,
+      );
     }
     if (s == 400) {
-      throw GenException(GenErrorCode.badRequest, 'Pollinations rejected the prompt.',
-          provider: id, httpStatus: s);
+      throw GenException(
+        GenErrorCode.badRequest,
+        'Pollinations rejected the prompt.',
+        provider: id,
+        httpStatus: s,
+      );
     }
     if (s == 403 || s == 451) {
-      throw GenException(GenErrorCode.contentFiltered, 'Blocked by safety filter',
-          provider: id, httpStatus: s);
+      throw GenException(
+        GenErrorCode.contentFiltered,
+        'Blocked by safety filter',
+        provider: id,
+        httpStatus: s,
+      );
     }
     if (s >= 500) {
-      throw GenException(GenErrorCode.server, 'HTTP $s', provider: id, httpStatus: s);
+      throw GenException(
+        GenErrorCode.server,
+        'HTTP $s',
+        provider: id,
+        httpStatus: s,
+      );
     }
     if (s == 200) {
-      throw GenException(GenErrorCode.server, 'Pollinations returned no image',
-          provider: id, httpStatus: s);
+      throw GenException(
+        GenErrorCode.server,
+        'Pollinations returned no image',
+        provider: id,
+        httpStatus: s,
+      );
     }
-    throw GenException(GenErrorCode.unknown, 'HTTP $s', provider: id, httpStatus: s);
+    throw GenException(
+      GenErrorCode.unknown,
+      'HTTP $s',
+      provider: id,
+      httpStatus: s,
+    );
   }
 
   static Duration _roundUp(Duration d) =>
